@@ -1,0 +1,152 @@
+<!DOCTYPE>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="main.css"/>
+</head>
+<body>
+<div class="container" style="height: 10%;">
+    <div class="alert" id="message" role="alert" style="display: none">
+        Это уведомление об успехе — check it out!
+    </div>
+</div>
+    <div class="container wrapper" style="height: 90%;">
+        <div class="row">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-8 my-auto">
+                <form id="feedback-form">
+                    <div class="form-group">
+                        <label for="lastname">Фамилия</label>
+                        <input type="text" class="form-control" name="lastname" id="lastname"  placeholder="Фамилия">
+                        <div class="error-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstName">Имя</label>
+                        <input type="name" class="form-control" name="firstname" id="firstName" placeholder="Имя">
+                        <div class="error-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="patronymic">Отчество</label>
+                        <input type="text" class="form-control" name="patronymic" id="patronymic" placeholder="Отчество">
+                        <div class="error-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Адрес</label>
+                        <input type="text" class="form-control" name="address" id="address" placeholder="Адрес">
+                        <div class="error-box"></div>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="birthday" >Дата рождения</label>
+                        <input class="form-control" name="birthday" type="date" value="1992-09-18" id="birthday" placeholder="Дата рождения">
+                        <div class="error-box"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            </div>
+            <div class="col-lg-2"></div>
+        </div>
+
+
+    </div>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+
+            $('input#lastname, input#firstName, input#patronymic, input#address, input#birthday').unbind().blur( function(){
+
+                var id = $(this).attr('id');
+                var val = $(this).val();
+                var nameField = $(this).attr('placeholder');
+
+                if(id === 'birthday'){
+
+                    if(val === ''){
+                        $(this).removeClass('not_error').addClass('error');
+                        $(this).next('.error-box').html('поле "' + nameField + '" укажите дату своего дня рождения в формате дд.мм.гггг, поле не должно быть пустым')
+                            .css('color','red')
+                            .animate({'paddingLeft':'10px'},400)
+                            .animate({'paddingLeft':'5px'},400);
+                    } else if(Date.parse(val) >= Date.now()){
+                        $(this).removeClass('not_error').addClass('error');
+                        $(this).next('.error-box').html('поле "' + nameField + '" укажите дату своего дня рождения в формате дд.мм.гггг, поле не может быть больше текущей даты')
+                            .css('color','red')
+                            .animate({'paddingLeft':'10px'},400)
+                            .animate({'paddingLeft':'5px'},400);
+                    } else {
+                        $(this).addClass('not_error');
+                        $(this).next('.error-box').text('Принято')
+                            .css('color','green')
+                            .animate({'paddingLeft':'10px'},400)
+                            .animate({'paddingLeft':'5px'},400);
+                        return true;
+
+                    }
+
+
+                } else {
+
+                    var rv_name = (id === 'address') ? /^[а-яА-Я0-9 \.\,]+$/ : /^[аА-яЯ]+$/;
+
+                    if(val.length > 2 && val != '' && rv_name.test(val))
+                    {
+                        $(this).addClass('not_error');
+                        $(this).next('.error-box').text('Принято')
+                            .css('color','green')
+                            .animate({'paddingLeft':'10px'},400)
+                            .animate({'paddingLeft':'5px'},400);
+                    }
+                    else
+                    {
+                        $(this).removeClass('not_error').addClass('error');
+                        $(this).next('.error-box').html('поле "' + nameField + '" обязательно для заполнения, длина имени должна составлять не менее 2 символов, поле должно содержать только русские буквы')
+                            .css('color','red')
+                            .animate({'paddingLeft':'10px'},400)
+                            .animate({'paddingLeft':'5px'},400);
+                    }
+
+                }
+
+
+            }); // end blur()
+
+            $('form#feedback-form').submit(function(e){
+
+                e.preventDefault();
+
+                if($('.not_error').length == 5)
+                {
+                    $.ajax({
+                        url: 'handler.php',
+                        type: 'post',
+                        data: $(this).serialize(),
+
+                        beforeSend: function(xhr, textStatus){
+                            $('form#feedback-form :input').attr('disabled','disabled');
+                        },
+                        success: function(response){
+                            var response = JSON.parse(response);
+
+                            if(response.status === 'error'){
+
+                                $('#message').html('Ой! Что-то не так. Проверьте настроечки!').addClass('alert-warning').fadeIn('slow').fadeOut(3000);
+
+                            } else {
+
+                                $('#message').html('Запись успешно создана в БД! ID записи ' + response.id).addClass('alert-success').fadeIn('slow').fadeOut(3000);
+
+                            }
+                        }
+                    }); // end ajax({...})
+                }
+            }); // end submit()
+        }); // end script
+
+</script>
+
+</html>
